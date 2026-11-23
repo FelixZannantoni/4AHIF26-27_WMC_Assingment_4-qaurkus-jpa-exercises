@@ -40,6 +40,18 @@ public class BookResource {
     }
 
     @GET
+    @Path("/count")
+    public long count(@QueryParam("author") String author) {
+        return service.count(author);
+    }
+
+    @GET
+    @Path("/titles")
+    public List<BookTitle> titles() {
+        return service.titles();
+    }
+
+    @GET
     @Path("/{id}")
     public Book get(@PathParam("id") long id) {
         return service.get(id);

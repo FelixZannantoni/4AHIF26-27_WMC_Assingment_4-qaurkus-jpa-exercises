@@ -4,6 +4,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -28,8 +29,14 @@ public class BookResource {
     }
 
     @GET
-    public List<Book> list(@QueryParam("author") String author) {
-        return service.find(author);
+    public List<Book> list(@QueryParam("author") String author,
+                           @QueryParam("genre") Genre genre,
+                           @QueryParam("page") @DefaultValue("0") int page,
+                           @QueryParam("size") @DefaultValue("20") int size) {
+        if (genre != null) {
+            return service.findByGenre(genre);
+        }
+        return service.find(author, page, size);
     }
 
     @GET

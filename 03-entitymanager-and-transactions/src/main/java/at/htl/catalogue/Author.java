@@ -1,4 +1,6 @@
 package at.htl.catalogue;
 
-public record Author(Long id, String name) {
+import java.util.List;
+
+public record Author(Long id, String name, List<String> titles) {
 }

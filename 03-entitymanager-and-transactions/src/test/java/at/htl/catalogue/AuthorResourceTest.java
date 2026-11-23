@@ -50,4 +50,22 @@ class AuthorResourceTest {
              .statusCode(200)
              .body("name", hasItem("Le Guin"));
     }
+
+    @Test
+    void statsCountBooksPerAuthor() {
+        given()
+          .when().get("/authors/stats")
+          .then()
+             .statusCode(200)
+             .body("find { it.name == 'Lem' }.bookCount", equalTo(1));
+    }
+
+    @Test
+    void authorsComeWithTheirTitles() {
+        given()
+          .when().get("/authors")
+          .then()
+             .statusCode(200)
+             .body("find { it.name == 'Herbert' }.titles", hasItem("Dune"));
+    }
 }

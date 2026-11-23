@@ -12,33 +12,44 @@ import java.util.List;
 @ApplicationScoped
 public class LoanService {
 
+    private final LoanDao loans;
+    private final BookDao books;
     private final EntityManager em;
+    private final AuditLog auditLog;
     private final Clock clock;
 
-    public LoanService(EntityManager em, Clock clock) {
+    public LoanService(LoanDao loans, BookDao books, EntityManager em,
+                       AuditLog auditLog, Clock clock) {
+        this.loans = loans;
+        this.books = books;
         this.em = em;
+        this.auditLog = auditLog;
         this.clock = clock;
     }
 
     public List<Loan> all() {
-        return em.createQuery("from LoanEntity", LoanEntity.class)
-                .getResultStream()
+        return loans.findAll().stream()
                 .map(LoanEntity::toLoan)
                 .toList();
     }
 
     @Transactional
     public Loan lend(LoanRequest request) {
-        BookEntity book = em.find(BookEntity.class, request.bookId());
-        if (book == null) {
-            throw new BookNotFoundException(request.bookId());
-        }
+        auditLog.write("lend book " + request.bookId() + " to member " + request.memberId());
+
+        BookEntity book = books.findById(request.bookId())
+                .orElseThrow(() -> new BookNotFoundException(request.bookId()));
         MemberEntity member = em.find(MemberEntity.class, request.memberId());
         if (member == null) {
             throw new NotFoundException("Member " + request.memberId() + " not found");
         }
         LoanEntity loan = new LoanEntity(book, member, LocalDate.now(clock));
-        em.persist(loan);
+        loans.add(loan);
+
+        // the query flushes the insert above, so the new loan is counted too
+        if (loans.countOpen(book.id) > 1) {
+            throw new BookAlreadyLentException(book.id);   // rollback: the insert is undone
+        }
         return loan.toLoan();
     }
 }

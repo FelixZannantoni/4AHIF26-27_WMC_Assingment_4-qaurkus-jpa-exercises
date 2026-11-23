@@ -1,10 +1,9 @@
 package at.htl.catalogue;
 
-import org.junit.jupiter.api.BeforeEach;
+import io.quarkus.test.TestTransaction;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
-
-import jakarta.enterprise.event.Event;
-import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -12,18 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@QuarkusTest
+@TestTransaction
 class BookServiceTest {
 
-    private BookService service;
-
-    @BeforeEach
-    @SuppressWarnings("unchecked")
-    void setUp() {
-        Notifier silent = text -> { };
-        Event<BookCreated> events = Mockito.mock(Event.class);
-        // a fresh service with fresh fakes for every test
-        service = new BookService(silent, events, new TestConfig());
-    }
+    // the real service on the real (Dev Services) database,
+    // every test is rolled back at the end
+    @Inject
+    BookService service;
 
     @Test
     void unknownIdThrowsNotFound() {
@@ -39,24 +34,11 @@ class BookServiceTest {
 
     @Test
     void findFiltersByAuthor() {
-        service.add(new Book(null, "Dune", "Herbert", 1965));
-        service.add(new Book(null, "Solaris", "Lem", 1961));
+        service.add(new Book(null, "Ubik", "Dick", 1969));
 
-        List<Book> result = service.find("lem");
+        List<Book> result = service.find("dick");
 
         assertEquals(1, result.size());
-        assertEquals("Solaris", result.get(0).title());
-    }
-
-    private static class TestConfig implements CatalogueConfig {
-        @Override
-        public int maxResults() {
-            return 10;
-        }
-
-        @Override
-        public boolean audit() {
-            return false;
-        }
+        assertEquals("Ubik", result.get(0).title());
     }
 }

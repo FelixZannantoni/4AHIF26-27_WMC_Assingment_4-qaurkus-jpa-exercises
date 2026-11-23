@@ -1,5 +1,8 @@
 package at.htl.catalogue;
 
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Named;
@@ -10,19 +13,16 @@ import java.util.List;
 @ApplicationScoped
 public class BookService {
 
-    private final BookDao books;
-    private final AuthorDao authors;
+    private final BookRepository books;
     private final Notifier notifier;
     private final Event<BookCreated> events;
     private final CatalogueConfig config;
 
-    public BookService(BookDao books,
-                       AuthorDao authors,
+    public BookService(BookRepository books,
                        @Named("log") Notifier notifier,
                        Event<BookCreated> events,
                        CatalogueConfig config) {
         this.books = books;
-        this.authors = authors;
         this.notifier = notifier;
         this.events = events;
         this.config = config;
@@ -31,23 +31,32 @@ public class BookService {
     @Timed
     public List<Book> find(String author, int page, int size) {
         int max = Math.min(size, config.maxResults());
-        int first = page * max;
-        List<BookEntity> result = author == null
-                ? books.findAll(first, max)
-                : books.findByAuthor(author, first, max);
-        return result.stream()
+        return query(author)
+                .page(Page.of(page, max))
+                .list()
+                .stream()
                 .map(BookEntity::toBook)
                 .toList();
     }
 
+    public long count(String author) {
+        return query(author).count();
+    }
+
+    public List<BookTitle> titles() {
+        return books.findAll(Sort.by("title"))
+                .project(BookTitle.class)
+                .list();
+    }
+
     public List<Book> findByGenre(Genre genre) {
-        return books.findByGenre(genre).stream()
+        return books.byGenre(genre).stream()
                 .map(BookEntity::toBook)
                 .toList();
     }
 
     public Book get(long id) {
-        return books.findById(id)
+        return books.findByIdOptional(id)
                 .map(BookEntity::toBook)
                 .orElseThrow(() -> new BookNotFoundException(id));
     }
@@ -56,7 +65,7 @@ public class BookService {
     public Book add(Book book) {
         BookEntity entity = BookEntity.from(book);
         authorNamed(book.author()).addBook(entity);
-        books.add(entity);
+        books.persist(entity);
         Book saved = entity.toBook();
         events.fire(new BookCreated(saved));
         notifier.send("New book: " + saved.title());
@@ -65,15 +74,21 @@ public class BookService {
 
     @Transactional
     public void remove(long id) {
-        books.findById(id).ifPresent(books::remove);
+        books.deleteById(id);
+    }
+
+    private PanacheQuery<BookEntity> query(String author) {
+        return author == null
+                ? books.findAll(Sort.by("id"))
+                : books.byAuthor(author);
     }
 
     private AuthorEntity authorNamed(String name) {
-        return authors.findByName(name)
+        return AuthorEntity.findByName(name)
                 .orElseGet(() -> {
                     AuthorEntity author = new AuthorEntity();
                     author.name = name;
-                    authors.add(author);
+                    author.persist();
                     return author;
                 });
     }

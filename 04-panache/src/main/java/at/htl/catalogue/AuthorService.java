@@ -8,24 +8,18 @@ import java.util.List;
 @ApplicationScoped
 public class AuthorService {
 
-    private final AuthorDao authors;
-
-    public AuthorService(AuthorDao authors) {
-        this.authors = authors;
-    }
-
     public List<Author> all() {
-        return authors.findAllWithBooks().stream()
+        return AuthorEntity.listWithBooks().stream()
                 .map(AuthorEntity::toAuthor)
                 .toList();
     }
 
     public List<AuthorStats> stats() {
-        return authors.stats();
+        return AuthorEntity.stats();
     }
 
     public List<Book> books(long authorId) {
-        AuthorEntity author = authors.findById(authorId)
+        AuthorEntity author = AuthorEntity.<AuthorEntity>findByIdOptional(authorId)
                 .orElseThrow(() -> new NotFoundException("Author " + authorId + " not found"));
         return author.books.stream()
                 .map(BookEntity::toBook)

@@ -8,8 +8,4 @@ public record Book(
         @NotBlank String title,
         @NotBlank String author,
         @Min(1450) int year) {
-
-    public Book withId(long newId) {
-        return new Book(newId, title, author, year);
-    }
 }

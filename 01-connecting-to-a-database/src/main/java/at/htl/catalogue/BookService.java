@@ -1,61 +1,67 @@
 package at.htl.catalogue;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Named;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 
 @ApplicationScoped
 public class BookService {
 
-    private final List<Book> books = new CopyOnWriteArrayList<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    private final EntityManager em;
     private final Notifier notifier;
     private final Event<BookCreated> events;
     private final CatalogueConfig config;
 
-    public BookService(@Named("log") Notifier notifier,
+    public BookService(EntityManager em,
+                       @Named("log") Notifier notifier,
                        Event<BookCreated> events,
                        CatalogueConfig config) {
+        this.em = em;
         this.notifier = notifier;
         this.events = events;
         this.config = config;
     }
 
-    @PostConstruct
-    void seed() {
-        books.add(new Book(nextId.getAndIncrement(), "Dune", "Herbert", 1965));
-        books.add(new Book(nextId.getAndIncrement(), "Solaris", "Lem", 1961));
-    }
-
     @Timed
     public List<Book> find(String author) {
-        return books.stream()
-                .filter(b -> author == null || b.author().equalsIgnoreCase(author))
-                .limit(config.maxResults())
+        TypedQuery<BookEntity> query = author == null
+                ? em.createQuery("from BookEntity order by id", BookEntity.class)
+                : em.createQuery("from BookEntity where lower(author) = lower(:author) order by id", BookEntity.class)
+                        .setParameter("author", author);
+        return query.setMaxResults(config.maxResults())
+                .getResultStream()
+                .map(BookEntity::toBook)
                 .toList();
     }
 
     public Book get(long id) {
-        return books.stream()
-                .filter(b -> b.id() == id)
-                .findFirst()
-                .orElseThrow(() -> new BookNotFoundException(id));
+        BookEntity entity = em.find(BookEntity.class, id);
+        if (entity == null) {
+            throw new BookNotFoundException(id);
+        }
+        return entity.toBook();
     }
 
+    @Transactional
     public Book add(Book book) {
-        Book saved = book.withId(nextId.getAndIncrement());
-        books.add(saved);
+        BookEntity entity = BookEntity.from(book);
+        em.persist(entity);
+        Book saved = entity.toBook();
         events.fire(new BookCreated(saved));
         notifier.send("New book: " + saved.title());
         return saved;
     }
 
+    @Transactional
     public void remove(long id) {
-        books.removeIf(b -> b.id() == id);
+        BookEntity entity = em.find(BookEntity.class, id);
+        if (entity != null) {
+            em.remove(entity);
+        }
     }
 }

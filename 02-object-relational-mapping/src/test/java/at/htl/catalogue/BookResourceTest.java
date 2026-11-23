@@ -81,4 +81,31 @@ class BookResourceTest {
           .when().get("/{id}", created.id())
           .then().statusCode(200).body("title", equalTo("Foundation"));
     }
+
+    @Test
+    void genreAndIsbnAreStored() {
+        Book created = given()
+                .contentType(ContentType.JSON)
+                .body(new Book(null, "The Hobbit", "Tolkien", 1937, Genre.FANTASY, "9780547928227"))
+                .when().post()
+                .then().statusCode(201)
+                .extract().as(Book.class);
+
+        given()
+          .when().get("/{id}", created.id())
+          .then()
+             .statusCode(200)
+             .body("genre", equalTo("FANTASY"))
+             .body("isbn", equalTo("9780547928227"));
+    }
+
+    @Test
+    void invalidIsbnReturns400() {
+        given()
+          .contentType(ContentType.JSON)
+          .body(new Book(null, "Dune", "Herbert", 1965, Genre.SCIENCE_FICTION, "123"))
+          .when().post()
+          .then()
+             .statusCode(400);
+    }
 }

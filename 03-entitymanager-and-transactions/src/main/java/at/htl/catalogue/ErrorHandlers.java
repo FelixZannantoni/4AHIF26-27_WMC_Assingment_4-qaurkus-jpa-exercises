@@ -10,4 +10,9 @@ public class ErrorHandlers {
     public RestResponse<ErrorDto> notFound(BookNotFoundException e) {
         return RestResponse.status(Response.Status.NOT_FOUND, new ErrorDto(e.getMessage()));
     }
+
+    @ServerExceptionMapper
+    public RestResponse<ErrorDto> alreadyLent(BookAlreadyLentException e) {
+        return RestResponse.status(Response.Status.CONFLICT, new ErrorDto(e.getMessage()));
+    }
 }

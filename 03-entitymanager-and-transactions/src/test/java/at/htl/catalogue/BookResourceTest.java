@@ -108,4 +108,26 @@ class BookResourceTest {
           .then()
              .statusCode(400);
     }
+
+    @Test
+    void pagingReturnsOneBookPerPage() {
+        given()
+          .queryParam("page", 1)
+          .queryParam("size", 1)
+          .when().get()
+          .then()
+             .statusCode(200)
+             .body("size()", equalTo(1))
+             .body("[0].title", equalTo("Solaris"));
+    }
+
+    @Test
+    void filterByGenre() {
+        given()
+          .queryParam("genre", "SCIENCE_FICTION")
+          .when().get()
+          .then()
+             .statusCode(200)
+             .body("title", hasItem("Solaris"));
+    }
 }

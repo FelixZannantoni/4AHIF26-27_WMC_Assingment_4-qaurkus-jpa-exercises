@@ -31,6 +31,6 @@ public class AuthorEntity {
     }
 
     public Author toAuthor() {
-        return new Author(id, name);
+        return new Author(id, name, books.stream().map(b -> b.title).toList());
     }
 }

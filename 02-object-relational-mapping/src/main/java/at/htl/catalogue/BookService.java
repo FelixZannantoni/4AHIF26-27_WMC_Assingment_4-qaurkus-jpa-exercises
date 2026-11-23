@@ -31,7 +31,7 @@ public class BookService {
     public List<Book> find(String author) {
         TypedQuery<BookEntity> query = author == null
                 ? em.createQuery("from BookEntity order by id", BookEntity.class)
-                : em.createQuery("from BookEntity where lower(author) = lower(:author) order by id", BookEntity.class)
+                : em.createQuery("from BookEntity where lower(author.name) = lower(:author) order by id", BookEntity.class)
                         .setParameter("author", author);
         return query.setMaxResults(config.maxResults())
                 .getResultStream()
@@ -50,6 +50,7 @@ public class BookService {
     @Transactional
     public Book add(Book book) {
         BookEntity entity = BookEntity.from(book);
+        authorNamed(book.author()).addBook(entity);
         em.persist(entity);
         Book saved = entity.toBook();
         events.fire(new BookCreated(saved));
@@ -63,5 +64,18 @@ public class BookService {
         if (entity != null) {
             em.remove(entity);
         }
+    }
+
+    private AuthorEntity authorNamed(String name) {
+        return em.createQuery("from AuthorEntity where name = :name", AuthorEntity.class)
+                .setParameter("name", name)
+                .getResultStream()
+                .findFirst()
+                .orElseGet(() -> {
+                    AuthorEntity author = new AuthorEntity();
+                    author.name = name;
+                    em.persist(author);
+                    return author;
+                });
     }
 }

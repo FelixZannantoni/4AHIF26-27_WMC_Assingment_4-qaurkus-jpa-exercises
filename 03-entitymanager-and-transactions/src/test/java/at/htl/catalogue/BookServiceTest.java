@@ -36,7 +36,7 @@ class BookServiceTest {
     void findFiltersByAuthor() {
         service.add(new Book(null, "Ubik", "Dick", 1969));
 
-        List<Book> result = service.find("dick");
+        List<Book> result = service.find("dick", 0, 10);
 
         assertEquals(1, result.size());
         assertEquals("Ubik", result.get(0).title());

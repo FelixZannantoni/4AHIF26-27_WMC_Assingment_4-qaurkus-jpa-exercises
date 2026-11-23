@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.nullValue;
 
 @QuarkusTest
 @TestHTTPEndpoint(BookResource.class)
@@ -129,5 +130,25 @@ class BookResourceTest {
           .then()
              .statusCode(200)
              .body("title", hasItem("Solaris"));
+    }
+
+    @Test
+    void countByAuthor() {
+        given()
+          .queryParam("author", "lem")
+          .when().get("/count")
+          .then()
+             .statusCode(200)
+             .body(equalTo("1"));
+    }
+
+    @Test
+    void titlesAreAProjection() {
+        given()
+          .when().get("/titles")
+          .then()
+             .statusCode(200)
+             .body("find { it.title == 'Dune' }.year", equalTo(1965))
+             .body("[0].id", nullValue());
     }
 }

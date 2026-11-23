@@ -24,6 +24,12 @@ public class AuthorResource {
     }
 
     @GET
+    @Path("/stats")
+    public List<AuthorStats> stats() {
+        return service.stats();
+    }
+
+    @GET
     @Path("/{id}/books")
     public List<Book> books(@PathParam("id") long id) {
         return service.books(id);
