@@ -96,11 +96,12 @@ E --> DB : SQL via JDBC
 
 ### 🧰 Setup: clone the starter
 ```bash
-git clone <STARTER-REPO-URL> catalogue-jpa
-cd catalogue-jpa
+git clone https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises.git
+cd "wmc4-qaurkus-jpa-exercises/Ex - Quarkus - JPA - Connecting to a Database"
 ```
 
 ##fragment
+- Repository: [https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises](https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises) - branch `main` is the starter, branch [`final_code`](https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises/tree/final_code) is the `final-code` we compare with
 - Open the folder in **IntelliJ IDEA Ultimate**, let it import the Maven project
 - Quarkus 3.40, Java 25 or newer, and today a **container runtime is required**: Docker or Podman must be running
 - 👉 Run `docker ps` (or `podman ps`) now. An error here means Dev Services will fail in step 1

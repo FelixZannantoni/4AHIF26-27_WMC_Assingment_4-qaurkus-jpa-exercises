@@ -103,11 +103,12 @@ member ||--o{ loan
 
 ### 🧰 Setup: clone the starter
 ```bash
-git clone <STARTER-REPO-URL> catalogue-orm
-cd catalogue-orm
+git clone https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises.git
+cd "wmc4-qaurkus-jpa-exercises/Ex - Quarkus - JPA - Object-Relational Mapping"
 ```
 
 ##fragment
+- Repository: [https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises](https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises) - branch `main` is the starter, branch [`final_code`](https://github.com/HTL-LEO-WMC/wmc4-qaurkus-jpa-exercises/tree/final_code) is the `final-code` we compare with
 - Open the folder in **IntelliJ IDEA Ultimate**, let it import the Maven project
 - Quarkus 3.40, Java 25 or newer, **Docker or Podman must run**: Dev Services starts PostgreSQL
 - Look at `BookEntity`, `BookService` (it uses the `EntityManager`) and `src/main/resources/import.sql`
